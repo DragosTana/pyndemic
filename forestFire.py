@@ -6,15 +6,13 @@ from matplotlib.animation import FuncAnimation
 grid_size = 50
 num_steps = 100
 
-# Set the initial parameters
+# Parameters of the SIR model
 initial_infected = 5
 infection_rate = 0.3
 recovery_rate = 0.1
 
-# Initialize the grid
 grid = np.zeros((grid_size, grid_size))
 
-# Randomly infect a few cells
 infected_indices = np.random.choice(range(grid_size**2), size=initial_infected, replace=False)
 grid[np.unravel_index(infected_indices, (grid_size, grid_size))] = 1
 
@@ -48,23 +46,12 @@ def update(step):
                 if np.random.random() < recovery_rate:
                     new_grid[i, j] = 2  # Recover the cell
 
-
-    # Update the grid
     grid = new_grid
-
-    # Clear the previous plot
     ax.clear()
-
-    # Plot the grid
     ax.imshow(grid, cmap='RdYlBu', vmin=0, vmax=2, aspect='equal')
-
-    # Set plot title and labels
     ax.set_title(f"Step: {step+1}")
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
 
-# Create the animation
 ani = FuncAnimation(fig, update, frames=num_steps, interval=200)
-
-# Show the animation
 plt.show()
