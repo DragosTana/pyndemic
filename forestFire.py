@@ -3,11 +3,11 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
 # Set the grid size and number of time steps
-grid_size = 50
+grid_size = 200
 num_steps = 100
 
 # Parameters of the SIR model
-initial_infected = 5
+initial_infected = 3        
 infection_rate = 0.3
 recovery_rate = 0.1
 
