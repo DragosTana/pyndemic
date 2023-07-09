@@ -75,7 +75,7 @@ def evaluate_risk_perception(G: nx.Graph, H: float, J: float) -> None:
         s = np.count_nonzero([G.nodes[neighbor]['state'] for neighbor in neighbors])
         G.nodes[node]['risk_perception'] = np.exp(-(H + J * s / k))
                
-def update_states(G: nx.Graph, tau: int) -> None:
+def spread(G: nx.Graph, tau: int) -> None:
     """
     Propagate the disease in the graph G with probability p*risk_perception
     """
@@ -111,7 +111,7 @@ def simulate_disease_spread(G: nx.Graph, H: float, J: float, tau: int = 0.1, gam
     for i in range(iteration):
 
         evaluate_risk_perception(G, H, J)
-        update_states(G, tau)
+        spread(G, tau)
         recover(G, gamma)
         
         color_map = []
@@ -128,21 +128,27 @@ def simulate_disease_spread(G: nx.Graph, H: float, J: float, tau: int = 0.1, gam
      
 def main():
     # Create a BA graph
-    n = 1000
+    nodes = 1000
     m = 2
-    G = nx.barabasi_albert_graph(n, m)
+    G = nx.barabasi_albert_graph(nodes, m)
     
+    # initilize infected nodes
+    initial_infected = 5
     initialize_infected(G, 3)
+    
+    # robe per plottare
     d = dict(G.degree)
     position = nx.kamada_kawai_layout(G)
     fig, ax = plt.subplots()    
-    #plt.pause(10)
     
+    # Inizio simulazione
     for i in range(300):
+        # At each iteration, evaluate the risk perception of each node, propagate the disease and recover the infected nodes
         evaluate_risk_perception(G, H=1, J=0.1)
-        update_states(G, tau=0.2)
+        spread(G, tau=0.2)
         recover(G, gamma=0.1)
         
+        # roba per plottare
         color_map = []
         for node in G:
             if G.nodes[node]['state'] == 0:
@@ -152,7 +158,6 @@ def main():
                 
         ax.clear()
         nx.draw(G, ax=ax, node_size=[v*10 for v in d.values()], node_color=color_map, with_labels=False, width=0.1, pos=position) 
-        
         plt.pause(0.1)  
         
     fig.show()
