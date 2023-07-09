@@ -77,7 +77,7 @@ def evaluate_risk_perception(G: nx.Graph, H: float, J: float) -> None:
                
 def spread(G: nx.Graph, tau: int) -> None:
     """
-    Propagate the disease in the graph G with probability p*risk_perception
+    Propagate the disease in the graph G with probability tau*risk_perception
     """
     
     for node in G.nodes():
@@ -141,12 +141,13 @@ def main():
     position = nx.kamada_kawai_layout(G)
     fig, ax = plt.subplots()    
     
+    plt.pause(5)
     # Inizio simulazione
     for i in range(300):
         # At each iteration, evaluate the risk perception of each node, propagate the disease and recover the infected nodes
-        evaluate_risk_perception(G, H=1, J=0.1)
-        spread(G, tau=0.2)
-        recover(G, gamma=0.1)
+        evaluate_risk_perception(G, H=1, J=3)
+        spread(G, tau=0.4)
+        recover(G, gamma=0)
         
         # roba per plottare
         color_map = []
@@ -158,7 +159,7 @@ def main():
                 
         ax.clear()
         nx.draw(G, ax=ax, node_size=[v*10 for v in d.values()], node_color=color_map, with_labels=False, width=0.1, pos=position) 
-        plt.pause(0.1)  
+        plt.pause(1)  
         
     fig.show()
         
