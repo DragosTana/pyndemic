@@ -129,13 +129,15 @@ def simulate_disease_spread(G: nx.Graph, H: float, J: float, tau: int = 0.1, gam
 def main():
     # Create a BA graph
     n = 1000
-    m = 4
+    m = 2
     G = nx.barabasi_albert_graph(n, m)
     
-    initialize_infected(G, 20)
-    position = nx.spring_layout(G)
+    initialize_infected(G, 3)
+    d = dict(G.degree)
+    position = nx.kamada_kawai_layout(G)
     fig, ax = plt.subplots()    
-    plt.pause(10)
+    #plt.pause(10)
+    
     for i in range(300):
         evaluate_risk_perception(G, H=1, J=0.1)
         update_states(G, tau=0.2)
@@ -149,12 +151,12 @@ def main():
                 color_map.append('red')
                 
         ax.clear()
-        nx.draw(G, ax=ax, node_size=30, node_color=color_map, with_labels=False, width=0.1, pos=position) 
+        nx.draw(G, ax=ax, node_size=[v*10 for v in d.values()], node_color=color_map, with_labels=False, width=0.1, pos=position) 
         
-        plt.pause(0.2)  
-        plt.draw()  
+        plt.pause(0.1)  
         
-    plt.show()  
+    fig.show()
+        
 
 
 main()
