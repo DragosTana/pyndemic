@@ -102,54 +102,34 @@ def recover(G: nx.Graph, gamma: int) -> None:
                 G.nodes[node]['state'] = 0
 
        
-def simulate_disease_spread(G: nx.Graph, H: float, J: float, tau: int = 0.1, gamma: int = 0.3, iteration: int = 100) -> None:
+def simulate_disease_spread(
+    G: nx.Graph, 
+    H: float, 
+    J: float, 
+    tau: int = 0.1, 
+    gamma: int = 0.3, 
+    iteration: int = 100,
+    initial_infected: int = 10,
+    ) -> None:
+    """
+    Simulates the spread of a deseas over a graph
     
-    initialize_infected(G, len(G.nodes()) // 10)
-    
-    fig, ax = plt.subplots()    
-    
-    for i in range(iteration):
+    #Parameters: 
 
-        evaluate_risk_perception(G, H, J)
-        spread(G, tau)
-        recover(G, gamma)
-        
-        color_map = []
-        for node in G:
-            if G.nodes[node]['state'] == 0:
-                color_map.append('blue')
-            else:
-                color_map.append('red')
-        
-        nx.draw(G, ax = ax, node_size = 20, node_color = color_map, with_labels = False, width = 0.1)
-        ax.clear()
-    plt.show()    
-            
-     
-def main():
-    # Create a BA graph
-    nodes = 1000
-    m = 2
-    G = nx.barabasi_albert_graph(nodes, m)
+    """
+
+    initialize_infected(G, initial_infected)
     
-    # initilize infected nodes
-    initial_infected = 5
-    initialize_infected(G, 3)
-    
-    # robe per plottare
     d = dict(G.degree)
     position = nx.kamada_kawai_layout(G)
     fig, ax = plt.subplots()    
     
-    plt.pause(5)
-    # Inizio simulazione
-    for i in range(300):
+    for i in range(iteration):
         # At each iteration, evaluate the risk perception of each node, propagate the disease and recover the infected nodes
-        evaluate_risk_perception(G, H=1, J=3)
-        spread(G, tau=0.4)
-        recover(G, gamma=0)
-        
-        # roba per plottare
+        evaluate_risk_perception(G = G, H = H, J = J)
+        spread(G, tau=tau)
+        recover(G, gamma=gamma)
+
         color_map = []
         for node in G:
             if G.nodes[node]['state'] == 0:
@@ -161,11 +141,21 @@ def main():
         nx.draw(G, ax=ax, node_size=[v*10 for v in d.values()], node_color=color_map, with_labels=False, width=0.1, pos=position) 
         plt.pause(1)  
         
-    fig.show()
+    fig.show() 
+            
+     
+def main():
+        
+    # Create a BA graph
+    nodes = 1000
+    m = 2
+    G = nx.barabasi_albert_graph(nodes, m)
+    
+    simulate_disease_spread(G, H = 1, J = 1)
         
 
-
-main()
+if __name__ == "__main__":
+    main()
 
 
 
