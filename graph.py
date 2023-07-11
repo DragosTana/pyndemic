@@ -1,9 +1,11 @@
+#! /bin/python3
 import networkx as nx
 import numpy as np
 import random as rd
 import matplotlib.pyplot as plt
-import tqdm
 from matplotlib.animation import FuncAnimation
+
+import utils
 
 #------------- Barabasi-Albert Graph -------------#
 
@@ -72,32 +74,43 @@ def evaluate_risk_perception(G: nx.Graph, H: float, J: float) -> None:
     for node in G.nodes():
         neighbors = list(G.neighbors(node))
         k = len(neighbors)
-        s = np.count_nonzero([G.nodes[neighbor]['state'] for neighbor in neighbors])
+        s = 0
+        for neighbor in neighbors:
+            if G.nodes[neighbor]['state'] == 1:
+                s += 1
         G.nodes[node]['risk_perception'] = np.exp(-(H + J * s / k))
+        #print(G.nodes[node]['risk_perception'])
                
-def spread(G: nx.Graph, tau: int) -> None:
+def spread(G: nx.Graph, tau: float) -> None:
     """
     Propagate the disease in the graph G with probability tau*risk_perception
     """
     
     for node in G.nodes():
+        
+        neighbors = list(G.neighbors(node))
+        s = 0
+        for neighbor in neighbors:
+            if G.nodes[neighbor]['state'] == 1:
+                s += 1
+                
         if G.nodes[node]['state'] == 1:
             G.nodes[node]["tmp"] = 0
             continue
-        elif np.count_nonzero([G.nodes[neighbor]['state'] for neighbor in G.neighbors(node)]) == 0:
+        elif s == 0:
             continue
         else:
             if np.random.random() < tau * G.nodes[node]['risk_perception']:
                 G.nodes[node]['state'] = 1
                 G.nodes[node]["tmp"] = 1
                 
-def recover(G: nx.Graph, gamma: int) -> None:
+def recover(G: nx.Graph, gamma: float) -> None:
     """
     Recover the infected nodes with probability gamma
     """
     
     for node in G.nodes():
-        if G.nodes[node]['state'] == 1 and G.nodes[node]["tmp"] == 0:
+        if G.nodes[node]['state'] == 1: #and G.nodes[node]["tmp"] == 0:
             if np.random.random() < gamma:
                 G.nodes[node]['state'] = 0
 
@@ -107,10 +120,11 @@ def simulate_disease_spread(
     H: float, 
     J: float, 
     tau: int = 0.1, 
-    gamma: int = 0.3, 
+    gamma: int = 0.1, 
     iteration: int = 100,
     initial_infected: int = 10,
-    ) -> None:
+    plot: bool = False
+    ) -> list[float]:
     """
     Simulates the spread of a deseas over a graph
     
@@ -119,41 +133,56 @@ def simulate_disease_spread(
     """
 
     initialize_infected(G, initial_infected)
-    
     d = dict(G.degree)
-    position = nx.kamada_kawai_layout(G)
-    fig, ax = plt.subplots()    
+    
+    if plot:
+        position = nx.kamada_kawai_layout(G)
+        fig, ax = plt.subplots()  
+        
+    infected = []  
     
     for i in range(iteration):
+        utils.progress_bar(i, iteration)
+
+        if plot:
+            color_map = []
+            for node in G:
+                if G.nodes[node]['state'] == 0:
+                    color_map.append('blue')
+                else:
+                    color_map.append('red')
+
+            ax.clear()
+            nx.draw(G, ax=ax, node_size=[v*10 for v in d.values()], node_color=color_map, with_labels=False, width=0.1, pos=position) 
+            plt.pause(1)
+             
+        infected.append(count_infected(G)/G.number_of_nodes())
+        
         # At each iteration, evaluate the risk perception of each node, propagate the disease and recover the infected nodes
         evaluate_risk_perception(G = G, H = H, J = J)
         spread(G, tau=tau)
         recover(G, gamma=gamma)
-
-        color_map = []
-        for node in G:
-            if G.nodes[node]['state'] == 0:
-                color_map.append('blue')
-            else:
-                color_map.append('red')
-                
-        ax.clear()
-        nx.draw(G, ax=ax, node_size=[v*10 for v in d.values()], node_color=color_map, with_labels=False, width=0.1, pos=position) 
-        plt.pause(1)  
         
-    fig.show() 
-            
-     
+    return infected
+        
+                    
 def main():
         
     # Create a BA graph
-    nodes = 1000
+    nodes = 2500
     m = 2
     G = nx.barabasi_albert_graph(nodes, m)
+    infected_1 = simulate_disease_spread(G, H = 0, J = 10, tau=0.2, iteration= 1000, initial_infected=10)
+    infected_5 = simulate_disease_spread(G, H = 0, J = 10, tau=0.4, iteration= 1000, initial_infected=10)
+    infected_10 = simulate_disease_spread(G, H = 0, J = 10, tau=0.8, iteration= 1000, initial_infected=10)
     
-    simulate_disease_spread(G, H = 1, J = 1)
+    plt.plot(infected_1, 'r--', linewidth = 2)
+    plt.plot(infected_5, 'b--', linewidth = 2)
+    plt.plot(infected_10, 'g--', linewidth = 2)
+    plt.legend(['tau = 0.2', 'tau = 0.4', 'tau = 0.8'])
+    
+    plt.show()        
         
-
 if __name__ == "__main__":
     main()
 
